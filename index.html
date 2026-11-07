@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="theme-color" content="#ffffff"><meta name="color-scheme" content="light"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>日本行程</title>
+<style>
+:root{--bg:#ffffff;--card:#ffffff;--inp:#ffffff;--ink:#1f2d2b;--mut:#6b807c;--line:#d3e3e0;--acc:#007468;--acc2:#dff0ed;--tm:#007468;--del:#007468;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+a:not(.btn){color:var(--acc)}input[type=checkbox]{accent-color:var(--acc);width:20px;height:20px}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Noto Sans CJK TC","Microsoft JhengHei",Roboto,sans-serif}
+body{max-width:640px;margin:0 auto;padding:12px 12px 80px}
+h1{font-size:20px;margin:4px 0 8px;display:flex;justify-content:space-between;align-items:center}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:6px;background:var(--bg);padding:6px 0}
+.tabs button,.chip{flex:1;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 4px;border-radius:10px;font:inherit}
+.tabs button.on,.chip.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.chip{flex:none;padding:5px 12px;border-radius:20px;font-size:13px}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.days{display:flex;gap:6px;overflow-x:auto;padding:4px 0}
+input,select,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--inp);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:0}
+input.n{width:64px}textarea{width:100%;min-height:54px}
+.card{background:#eef7f5;border:1px solid #c3dcd7;border-left:6px solid var(--acc);border-radius:14px;padding:12px;margin:10px 0;box-shadow:0 2px 8px rgba(0,116,104,.14)}.bak .card{border-left-color:#8bbab3}
+.card.drag{opacity:.6;border-color:var(--acc)}
+.hd{display:flex;gap:8px;align-items:center}
+.hd .t{flex:1;min-width:0}.time{font-weight:700;color:var(--tm);font-variant-numeric:tabular-nums}
+.sub{color:var(--mut);font-size:13px}
+.h{touch-action:none;cursor:grab;font-size:22px;color:var(--mut);padding:6px 10px;user-select:none;-webkit-user-select:none}.ta{box-shadow:0 4px 0 var(--acc)}.tb{box-shadow:0 -4px 0 var(--acc)}.tz{outline:2px dashed var(--acc)}.note{white-space:pre-wrap;font-size:13px;color:var(--mut)}textarea{overflow:hidden;resize:none}.ex{border-top:1px solid var(--line);padding:6px 0}.li input.tx{flex:1}.li.done input.tx{text-decoration:line-through;color:var(--mut)}.cf{background:var(--acc2);border-radius:8px;padding:8px;margin-top:8px}
+.tv{color:var(--mut);font-size:13px;margin:2px 0 2px 14px;padding:2px 0 2px 10px;border-left:2px dashed var(--line)}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:5px 10px;font:inherit;font-size:13px;text-decoration:none;display:inline-block}
+.btn.p{background:var(--acc);color:#fff;border-color:var(--acc)}.btn.d{color:var(--del)}
+.zone{min-height:44px;border-radius:12px}
+.bak{border:2px dashed var(--line);padding:6px;margin-top:10px}
+.sec{font-weight:700;margin:10px 0 2px;font-size:13px;color:var(--mut)}
+.li{display:flex;gap:8px;align-items:center;padding:3px 0}.li.done span{text-decoration:line-through;color:var(--mut)}
+.li span{flex:1}.tag{font-size:12px;background:var(--acc2);border-radius:6px;padding:1px 6px}
+.tot{font-size:20px;font-weight:700;color:var(--tm)}
+.empty{color:var(--mut);text-align:center;padding:10px;font-size:13px}
+</style></head><body>
+<h1>🗾 日本行程 <button class="btn" onclick="bk()">備份／分享</button></h1>
+<div class="tabs" id="tabs"></div><div id="v"></div>
+<script>
+const C=['吃食','物品','票券','機票','住宿','家電','保費'];
+let S=null,tab='trip',di=0,sel=new Set(C),op={},flt=0,showBk=false,cf=null,arm=false,ed=new Set(),dc=null;
+try{S=JSON.parse(localStorage.getItem('jt'))}catch(e){}
+S=S||{days:[{date:'',start:'09:00',items:[],backup:[]}],gx:[],rate:''};
+function mig(o){o.days=o.days||[];o.gx=o.gx||[];o.rate=o.rate||'';o.days.forEach(d=>{d.items=d.items||[];d.backup=d.backup||[];d.start=d.start||'09:00';[...d.items,...d.backup].forEach(x=>{x.id=x.id||Math.random().toString(36).slice(2,9);x.links=x.links||[];x.todo=x.todo||[];x.exp=x.exp||[];if(x.th==null&&x.tm==null){x.th='';x.tm=x.travel||''}x.th=x.th==null?'':x.th;x.tm=x.tm==null?'':x.tm;x.dur=x.dur==null?60:x.dur;['name','place','note','tnote'].forEach(k=>x[k]=x[k]||'')})});if(!o.days.length)o.days=[{date:'',start:'09:00',items:[],backup:[]}];return o}
+mig(S);
+const save=()=>{try{localStorage.setItem('jt',JSON.stringify(S))}catch(e){}};
+const $=s=>document.getElementById(s),uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hm=s=>{const a=(s||'09:00').split(':');return(+a[0])*60+(+a[1]||0)};
+const fm=m=>{m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
+const fd=m=>m>=60?Math.floor(m/60)+'小時'+(m%60?m%60+'分鐘':''):m+'分鐘';
+const dura=x=>(+x.dh||0)*60+(+x.dur||0);
+const trav=x=>x.th==null&&x.tm==null?(+x.travel||0):(+x.th||0)*60+(+x.tm||0);
+const D=()=>S.days[di];
+const find=id=>{for(const d of S.days)for(const k of['items','backup']){const x=d[k].find(i=>i.id===id);if(x)return x}};
+const gm=q=>/^https?:/.test(q)?q:'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);
+const mny=a=>a.cur==='TWD'?'NT$'+Math.round(a.a).toLocaleString():'¥'+Math.round(a.a).toLocaleString()+(+S.rate?'（NT$'+Math.round(a.a*S.rate).toLocaleString()+'）':'');
+const sumStr=l=>{const j=l.filter(a=>a.cur!=='TWD').reduce((q,a)=>q+a.a,0),w=l.filter(a=>a.cur==='TWD').reduce((q,a)=>q+a.a,0);return '¥'+Math.round(j).toLocaleString()+(+S.rate&&j?'（NT$'+Math.round(j*S.rate).toLocaleString()+'）':'')+(w?' + NT$'+Math.round(w).toLocaleString():'')};
+const sumFull=l=>{const j=l.filter(a=>a.cur!=='TWD').reduce((q,a)=>q+a.a,0),w=l.filter(a=>a.cur==='TWD').reduce((q,a)=>q+a.a,0);return sumStr(l)+(j&&w&&+S.rate?' ＝ 共 NT$'+Math.round(w+j*S.rate).toLocaleString():'')};
+const expTot=l=>{const rt=+S.rate||0,j=l.filter(a=>a.cur!=='TWD').reduce((q,a)=>q+a.a,0),w=l.filter(a=>a.cur==='TWD').reduce((q,a)=>q+a.a,0);return (!j||rt)?'NT$'+Math.round(w+j*rt).toLocaleString():'¥'+Math.round(j).toLocaleString()+(w?' + NT$'+Math.round(w).toLocaleString():'')};
+const cfm=(n,act)=>`<div class="cf">確定要刪除「${esc(n)||'未命名'}」嗎？<div class="row"><button class="btn p" onclick="dc=null;${act}">是，刪除</button><button class="btn" onclick="dc=null;render()">否</button></div></div>`;
+const linkRow=(l,id,k)=>{const key=`l:${id}:${k}`;return dc===key?cfm(l.t||l.u,`del('${id}','links',${k})`):`<div class="li"><span><a href="${esc(l.u)}" target="_blank" rel="noopener">${esc(l.t||l.u)}</a></span><button class="btn d" onclick="dc='${key}';render()">✕</button></div>`};
+const te=k=>{ed.has(k)?ed.delete(k):ed.add(k);render()};
+const todoRow=(a,id,k)=>{const key=`t:${id}:${k}`;if(ed.has(key)&&dc===key)return cfm(a.t,`del('${id}','todo',${k})`);if(ed.has(key))return `<div class="li"><input class="tx" value="${esc(a.t)}" oninput="ut('${id}',${k},'t',this.value)"><select onchange="ut('${id}',${k},'k',this.value)"><option ${a.k==='餐點'?'selected':''}>餐點</option><option ${a.k==='物品'?'selected':''}>物品</option></select><button class="btn p" onclick="te('${key}')">✓</button><button class="btn d" onclick="dc='${key}';render()">✕</button></div>`;
+ return `<div class="li ${a.done?'done':''}"><input type="checkbox" ${a.done?'checked':''} onchange="tg('${id}',${k})"><span>${esc(a.t)}</span><em class="tag">${a.k}</em><button class="btn" onclick="te('${key}')">✏️</button></div>`};
+const fit=t=>{t.style.height='auto';t.style.height=t.scrollHeight+'px'};
+const pn='onpointerdown="event.preventDefault()"';
+function up(id,k,v){const x=find(id);if(x){x[k]=v;save()}}
+function upd(k,v){D()[k]=v;save()}
+function render(){
+ $('tabs').innerHTML=[['trip','行程'],['list','清單'],['cost','花費']].map(t=>`<button class="${tab===t[0]?'on':''}" onclick="tab='${t[0]}';showBk=false;render()">${t[1]}</button>`).join('');
+ $('v').innerHTML=tab==='trip'?vTrip():tab==='list'?vList():vCost();
+ document.querySelectorAll('textarea.au').forEach(fit)}
+function vTrip(){
+ const d=D();let t=hm(d.start);
+ let h=`<div class="days">${S.days.map((x,i)=>`<button class="chip ${i===di?'on':''}" onclick="di=${i};render()">Day ${i+1}${x.date?' · '+esc(x.date.slice(5)):''}</button>`).join('')}<button class="chip" onclick="addDay()">＋</button></div>
+ <div class="row"><input type="date" value="${esc(d.date)}" onchange="upd('date',this.value);dq()"><input style="flex:1" placeholder="行程概要（例：CI100 08:30 起飛 → 東京）" value="${esc(d.flight||'')}" oninput="upd('flight',this.value)"></div>
+ <div class="zone" id="z-main">`;
+ d.items.forEach((x,i)=>{
+  if(i){const p=d.items[i-1];t+=trav(x);
+   h+=`<div class="tv"><div>🚃 <b>${fd(trav(x))}</b> · ${esc(p.name||'前一景點')} 至 ${esc(x.name||'此景點')} ${rl(p,x)}</div>${x.tnote?`<div>${esc(x.tnote)}</div>`:''}</div>`}
+  h+=card(x,fm(t)+'–'+fm(t+dura(x)),i,false);t+=dura(x)});
+ h+=`</div><button class="btn p" onclick="addItem()">＋ 新增景點</button>
+ <div class="bak"><div class="sec" style="margin-top:0">🅱️ 備案區（拖到這裡或按「備案」，不計入時間）</div><div class="zone" id="z-bak">${d.backup.map(x=>card(x,'備案',-1,true)).join('')}</div></div>`;
+ return h}
+function card(x,tm,i,bk){
+ const o=op[x.id],nt=x.todo.length,ng=x.todo.filter(a=>a.done).length;
+ let h=`<div class="card" data-id="${x.id}"><div class="hd"><span class="h" onpointerdown="dr(event)">≡</span><div class="t" onclick="op['${x.id}']=!op['${x.id}'];render()"><span class="time">${tm}</span> <b>${esc(x.name)||'未命名'}</b>${(nt||x.links.length||x.exp.length)?`<div class="sub">${[nt?`✅${ng}/${nt}`:'',x.links.length?`🔗${x.links.length}`:'',x.exp.length?'💴 '+expTot(x.exp):''].filter(Boolean).join(' · ')}</div>`:''}${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div><a class="btn" target="_blank" href="${gm(x.place||x.name||'')}">📍</a></div>`;
+ if(o){
+  h+=`<div class="row">${i===0?`<span class="sub">開始時間</span><input type="time" value="${esc(D().start)}" onchange="upd('start',this.value);dq()">`:''}<input style="flex:1;min-width:140px" placeholder="景點名稱" value="${esc(x.name)}" oninput="up('${x.id}','name',this.value)" onchange="dq()"></div>
+  <div class="row"><input style="flex:1" placeholder="貼上地址（點 📍 開 Google 地圖）" value="${esc(x.place)}" oninput="up('${x.id}','place',this.value)" onchange="dq()"></div>
+  <div class="row"><span class="sub">停留</span><input class="n" type="number" min="0" placeholder="0" value="${x.dh==null?'':x.dh}" onchange="up('${x.id}','dh',this.value);dq()"><span class="sub">時</span><input class="n" type="number" min="0" placeholder="0" value="${x.dur}" onchange="up('${x.id}','dur',this.value);dq()"><span class="sub">分（可直接填 90）</span></div>
+  ${i>0?`<div class="sec">🚃 從前一個景點移動</div><div class="row"><input class="n" type="number" min="0" placeholder="0" value="${x.th}" onchange="up('${x.id}','th',this.value);dq()"><span class="sub">時</span><input class="n" type="number" min="0" placeholder="0" value="${x.tm}" onchange="up('${x.id}','tm',this.value);dq()"><span class="sub">分（可直接填 90）</span></div>
+  <input style="width:100%" placeholder="移動備註（例：3號出口出站）" value="${esc(x.tnote||'')}" oninput="up('${x.id}','tnote',this.value)" onchange="dq()">`:''}
+  <textarea class="au" style="margin-top:6px" placeholder="備註" oninput="up('${x.id}','note',this.value);fit(this)" onchange="dq()">${esc(x.note)}</textarea>
+  <div class="sec">🔗 網頁連結</div>${x.links.map((l,k)=>linkRow(l,x.id,k)).join('')}
+  <div class="row"><input id="lt${x.id}" placeholder="標題" style="width:30%"><input id="lu${x.id}" placeholder="https://…" style="flex:1" onkeydown="if(event.key==='Enter')addLink('${x.id}')"><button class="btn p" ${pn} onclick="addLink('${x.id}')">加</button></div>
+  <div class="sec">🍜🛍 待點／待買</div>${x.todo.map((a,k)=>todoRow(a,x.id,k)).join('')}
+  <div class="row"><select id="tk${x.id}"><option>餐點</option><option>物品</option></select><input id="tt${x.id}" style="flex:1" placeholder="例：味噌拉麵" onkeydown="if(event.key==='Enter')addTodo('${x.id}')"><button class="btn p" ${pn} onclick="addTodo('${x.id}')">加</button></div>
+  <div class="sec">💴 這個景點的花費</div>${x.exp.map((a,k)=>exRow(a,x.id,k,'')).join('')}
+  ${expForm('e',x.id)}
+  <div class="row" style="margin-top:10px"><button class="btn" onclick="sw('${x.id}',-1)">▲</button><button class="btn" onclick="sw('${x.id}',1)">▼</button><button class="btn" onclick="mv('${x.id}')">${bk?'移回行程':'移到備案'}</button><button class="btn d" onclick="cf='${x.id}';render()">刪除景點</button></div>
+  ${cf===x.id?`<div class="cf">確定要刪除「${esc(x.name)||'未命名'}」嗎？<div class="row"><button class="btn p" onclick="rm('${x.id}')">是，刪除</button><button class="btn" onclick="cf=null;render()">否</button></div></div>`:''}`}
+ return h+'</div>'}
+function expForm(p,id){return `<div class="row"><input id="${p}n${id}" placeholder="項目（例：一蘭拉麵）" style="width:100%"></div>
+ <div class="row"><input id="${p}a${id}" type="number" inputmode="decimal" placeholder="金額" style="width:90px"><select id="${p}u${id}"><option value="JPY">日圓</option><option value="TWD">台幣</option></select><select id="${p}p${id}"><option>信用卡</option><option>現金</option></select><select id="${p}c${id}">${C.map(c=>`<option>${c}</option>`).join('')}</select><button class="btn p" ${pn} onclick="${p==='e'?`addExp('${id}')`:'addG()'}">加</button></div>`}
+function readExp(p,id){const f=$(p+'a'+id),a=+f.value;if(!a){f.focus();f.style.borderColor='var(--acc)';return null}return{n:$(p+'n'+id).value.trim()||'未命名',a,cur:$(p+'u'+id).value,pay:$(p+'p'+id).value,c:$(p+'c'+id).value}}
+function addExp(id){const e=readExp('e',id);if(!e)return;find(id).exp.push(e);save();render()}
+function addG(){const e=readExp('g','');if(!e)return;S.gx.push(e);save();render()}
+function addDay(){S.days.push({date:'',start:'09:00',items:[],backup:[]});di=S.days.length-1;save();render()}
+function addItem(){const x={id:uid(),name:'',place:'',dur:60,th:'',tm:20,tnote:'',note:'',links:[],todo:[],exp:[]};D().items.push(x);op[x.id]=true;save();render()}
+function mv(id){const d=D(),a=d.items.findIndex(i=>i.id===id);if(a>=0)d.backup.push(d.items.splice(a,1)[0]);else{const b=d.backup.findIndex(i=>i.id===id);d.items.push(d.backup.splice(b,1)[0])}save();render()}
+function sw(id,dir){const d=D();for(const arr of[d.items,d.backup]){const i=arr.findIndex(x=>x.id===id);if(i>=0){const j=i+dir;if(j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];save();render();return}}}
+function rm(id){const d=D();d.items=d.items.filter(i=>i.id!==id);d.backup=d.backup.filter(i=>i.id!==id);cf=null;save();render()}
+function del(id,k,i){ed.clear();find(id)[k].splice(i,1);save();render()}
+function tg(id,i){const a=find(id).todo[i];a.done=!a.done;save();render()}
+function addLink(id){const f=$('lu'+id);let u=f.value.trim();if(!u){f.focus();f.style.borderColor='var(--acc)';return}if(!/^https?:/.test(u))u='https://'+u;find(id).links.push({t:$('lt'+id).value.trim(),u});save();render()}
+function addTodo(id){const f=$('tt'+id),t=f.value.trim();if(!t){f.focus();f.style.borderColor='var(--acc)';return}find(id).todo.push({t,k:$('tk'+id).value,done:false});save();render()}
+function dr(e){e.preventDefault();const h=e.currentTarget,card=h.closest('.card'),y0=e.clientY;let tgt=null,after=false;
+ card.classList.add('drag');h.setPointerCapture(e.pointerId);
+ const clr=()=>document.querySelectorAll('.ta,.tb,.tz').forEach(n=>n.classList.remove('ta','tb','tz'));
+ const mvf=ev=>{card.style.transform=`translateY(${ev.clientY-y0}px)`;clr();card.style.pointerEvents='none';const el=document.elementFromPoint(ev.clientX,ev.clientY);card.style.pointerEvents='';tgt=null;if(!el)return;
+  const o=el.closest('.card');
+  if(o&&o!==card){const r=o.getBoundingClientRect();after=ev.clientY>=r.top+r.height/2;o.classList.add(after?'ta':'tb');tgt=o}
+  else if(!o){const z=el.closest('.bak')?$('z-bak'):el.closest('.zone');if(z){z.classList.add('tz');tgt=z}}};
+ const end=ok=>{h.removeEventListener('pointermove',mvf);h.removeEventListener('pointerup',upf);h.removeEventListener('pointercancel',cnf);
+  if(ok&&tgt){const d=D(),id=card.dataset.id,x=[...d.items,...d.backup].find(i=>i.id===id);d.items=d.items.filter(i=>i!==x);d.backup=d.backup.filter(i=>i!==x);
+   if(tgt.classList.contains('zone'))(tgt.id==='z-bak'?d.backup:d.items).push(x);
+   else{const tid=tgt.dataset.id,arr=d.items.some(i=>i.id===tid)?d.items:d.backup,k=arr.findIndex(i=>i.id===tid);arr.splice(k+(after?1:0),0,x)}
+   save()}
+  render()};
+ const upf=()=>end(true),cnf=()=>end(false);
+ h.addEventListener('pointermove',mvf);h.addEventListener('pointerup',upf);h.addEventListener('pointercancel',cnf)}
+function vList(){
+ let h=`<div class="row"><button class="chip ${flt?'':'on'}" onclick="flt=0;render()">全部</button><button class="chip ${flt?'on':''}" onclick="flt=1;render()">只看未完成</button></div>`,n=0;
+ S.days.forEach((d,k)=>[['items',''],['backup','（備案）']].forEach(([key,lb])=>d[key].forEach(x=>{
+  const l=x.todo.map((a,ix)=>[a,ix]).filter(p=>!flt||!p[0].done||ed.has(`t:${x.id}:${p[1]}`));if(!l.length)return;n++;
+  h+=`<div class="card"><b>Day ${k+1} · ${esc(x.name)||'未命名'}${lb}</b>${l.map(p=>todoRow(p[0],x.id,p[1])).join('')}</div>`})));
+ return h+(n?'':'<div class="empty">還沒有待點／待買項目。到「行程」展開景點新增。</div>')}
+function allExp(){const r=S.gx.map((a,i)=>({...a,src:'通用',id:'',k:i}));S.days.forEach((d,i)=>d.items.forEach(x=>x.exp.forEach((a,k)=>r.push({...a,src:'Day '+(i+1)+' '+(x.name||'景點'),id:x.id,k}))));return r}
+function vCost(){
+ const all=allExp(),f=all.filter(a=>sel.has(a.c)),rt=+S.rate||0;
+ const tw=l=>l.reduce((q,a)=>q+(a.cur==='TWD'?a.a:a.a*rt),0);
+ return `<div class="row">${C.map(c=>`<button class="chip ${sel.has(c)?'on':''}" onclick="sel.has('${c}')?sel.delete('${c}'):sel.add('${c}');render()">${c}</button>`).join('')}</div>
+ <div class="row"><button class="btn" onclick="sel=new Set(C);render()">全選</button><button class="btn" onclick="sel=new Set();render()">全不選</button></div>
+ <div class="card"><div class="sub">已選類別合計</div><div class="tot">${sumFull(f)}</div>
+ <div class="row"><span class="sub">匯率 1日圓 =</span><input class="n" type="number" step="0.001" value="${S.rate}" onchange="S.rate=this.value;save();dq()"><span class="sub">台幣</span></div>
+ <div style="font-size:18px;margin:4px 0"><b>折合台幣共 ${rt||!f.some(a=>a.cur!=='TWD')?'NT$'+Math.round(tw(f)).toLocaleString():'（請先填匯率）'}</b></div>
+ <div class="sub">${C.map(c=>`${c} ${sumFull(all.filter(a=>a.c===c))}`).join('<br>')}</div>
+ <div class="sub" style="margin-top:6px">信用卡 ${sumFull(f.filter(a=>(a.pay||'信用卡')==='信用卡'))}<br>現金 ${sumFull(f.filter(a=>a.pay==='現金'))}</div></div>
+ <div class="card">${f.map(a=>exRow(a,a.id,a.k,a.src)).join('')||'<div class="empty">沒有符合的花費</div>'}</div>
+ <div class="sec">新增通用花費（機票、住宿等）</div>${expForm('g','')}`}
+function bk(){showBk=!showBk;arm=false;if(!showBk){render();return}
+ $('v').innerHTML=`<div class="card"><div class="sec" style="margin-top:0">備份／分享給同行友人</div><div class="sub">打開這裡時已自動壓縮並複製目前資料（變成一串較短的文字），直接貼給朋友即可。對方貼到下方框裡按「匯入」（會覆蓋對方現有資料）。</div><textarea id="bx" style="min-height:140px;overflow:auto"></textarea><div id="bm" class="sub"></div><div class="row"><button class="btn p" onclick="mk()">重新複製</button><button class="btn" onclick="imp()">匯入</button><button class="btn" onclick="showBk=false;render()">返回</button></div></div>`;mk()}
+async function enc(t){const b=new Blob([t]).stream().pipeThrough(new CompressionStream('gzip'));const u=new Uint8Array(await new Response(b).arrayBuffer());let n='';for(let i=0;i<u.length;i+=8192)n+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return 'JT1:'+btoa(n)}
+async function dec(t){t=t.trim();if(!t.startsWith('JT1:'))return JSON.parse(t);if(typeof DecompressionStream==='undefined')throw new Error('nocomp');const n=atob(t.slice(4).replace(/\s/g,'')),u=Uint8Array.from(n,c=>c.charCodeAt(0));return JSON.parse(await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text())}
+function mk(){const raw=JSON.stringify(S),p=enc(raw).catch(()=>raw).then(t=>{$('bx').value=t;return t});
+ const m=t=>'共 '+t.length.toLocaleString()+' 字（壓縮前 '+raw.length.toLocaleString()+' 字）',ok=t=>{$('bm').textContent='✅ 已壓縮並複製，'+m(t)+'，可直接貼給朋友'},no=t=>{$('bx').focus();$('bx').select();$('bm').textContent=m(t)+'。自動複製沒成功，請長按文字框選「全選」再拷貝'};
+ const fb=t=>{try{$('bx').select();document.execCommand('copy')?ok(t):no(t)}catch(e){no(t)}};
+ try{if(window.ClipboardItem){navigator.clipboard.write([new ClipboardItem({'text/plain':p.then(t=>new Blob([t],{type:'text/plain'}))})]).then(()=>p.then(ok),()=>p.then(fb));return}}catch(e){}
+ p.then(t=>{try{navigator.clipboard.writeText(t).then(()=>ok(t),()=>fb(t))}catch(e){fb(t)}})}
+async function imp(){try{const o=await dec($('bx').value);if(!o.days)throw 0;if(!arm){arm=true;$('bm').textContent='再按一次「匯入」確認覆蓋目前資料';return}S=mig(o);di=0;save();showBk=false;render()}catch(e){$('bm').textContent=e&&e.message==='nocomp'?'這個瀏覽器太舊，不支援壓縮格式，請更新瀏覽器後再試':'格式不正確，請確認完整貼上'}}
+const rl=(p,x)=>{const ok=q=>q&&!/^https?:/.test(q.trim());return ok(p.place)&&ok(x.place)?`<a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(p.place)}&destination=${encodeURIComponent(x.place)}&travelmode=transit">查路線</a>`:''};
+const exRow=(a,id,k,src)=>{const key=`e:${id}:${k}`,r=`'${id}',${k}`;if(ed.has(key)&&dc===key)return cfm(a.n,`dx(${r})`);if(!ed.has(key))return `<div class="li"><span>${esc(a.n)}<div class="sub">${src?esc(src)+' · ':''}${a.pay||'信用卡'}</div></span><em class="tag">${a.c}</em><b>${mny(a)}</b><button class="btn" onclick="te('${key}')">✏️</button></div>`;return `<div class="ex"><div class="row"><input style="flex:1" value="${esc(a.n)}" oninput="ue(${r},'n',this.value)"><button class="btn p" onclick="te('${key}')">✓</button><button class="btn d" onclick="dc='${key}';render()">✕</button></div>${src?`<div class="sub">${esc(src)}</div>`:''}<div class="row"><input type="number" inputmode="decimal" style="width:90px" value="${a.a}" onchange="ue(${r},'a',+this.value);dq()"><select onchange="ue(${r},'cur',this.value);render()"><option value="JPY" ${a.cur!=='TWD'?'selected':''}>日圓</option><option value="TWD" ${a.cur==='TWD'?'selected':''}>台幣</option></select><select onchange="ue(${r},'pay',this.value);render()">${['信用卡','現金'].map(p=>`<option ${(a.pay||'信用卡')===p?'selected':''}>${p}</option>`).join('')}</select><select onchange="ue(${r},'c',this.value);render()">${C.map(c=>`<option ${a.c===c?'selected':''}>${c}</option>`).join('')}</select></div><div class="sub">${mny(a)}</div></div>`};
+function ue(id,k,f,v){(id?find(id).exp:S.gx)[k][f]=v;save()}
+function dx(id,k){ed.clear();(id?find(id).exp:S.gx).splice(k,1);save();render()}
+function ut(id,k,f,v){find(id).todo[k][f]=v;save()}
+let dirty=false;const dq=()=>{dirty=true};
+document.addEventListener('focusout',e=>{if(dirty&&!e.relatedTarget)setTimeout(()=>{if(dirty&&!document.activeElement.matches('input,textarea,select')){dirty=false;render()}},60)});
+render();
+</script></body></html>
