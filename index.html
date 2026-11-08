@@ -151,10 +151,8 @@ function vCost(){
  <div class="card">${f.map(a=>exRow(a,a.id,a.k,a.src)).join('')||'<div class="empty">沒有符合的花費</div>'}</div>
  <div class="sec">新增通用花費（機票、住宿等）</div>${expForm('g','')}`}
 function bk(){showBk=!showBk;arm=false;if(!showBk){render();return}
- const has=S.days.some(d=>d.items.length||d.backup.length)||S.gx.length;
- $('v').innerHTML=`<div class="card"><div class="sec" style="margin-top:0">匯出（給朋友或換手機）</div><div class="sub">目前有資料時，打開這裡會自動複製。</div><div id="bm0" class="sub"></div><textarea id="ex" readonly style="display:none;min-height:90px;overflow:auto"></textarea><div class="row"><button class="btn p" onclick="mk()">重新複製</button></div></div>
- <div class="card"><div class="sec" style="margin-top:0">匯入</div><div class="sub">把備份文字貼到下面，按「匯入」。匯入會覆蓋目前資料。</div><textarea id="bx" oninput="arm=false" placeholder="在這裡貼上備份文字" style="min-height:110px;overflow:auto"></textarea><div id="bm" class="sub"></div><div class="row"><button class="btn p" onclick="imp()">匯入</button><button class="btn" onclick="$('bx').value='';arm=false;$('bm').textContent=''">清空</button><button class="btn" onclick="showBk=false;render()">返回</button></div></div>`;
- if(has)mk();else $('bm0').textContent='目前沒有資料，所以沒有自動複製（避免蓋掉你剛複製的備份）。'}
+ $('v').innerHTML=`<div class="card"><div class="sec" style="margin-top:0">匯出（給朋友或換手機）</div><div class="sub">按下按鈕才會複製目前的行程，不會自動蓋掉你剪貼簿裡的內容。</div><div id="bm0" class="sub"></div><textarea id="ex" readonly style="display:none;min-height:90px;overflow:auto"></textarea><div class="row"><button class="btn p" onclick="mk()">複製目前行程</button></div></div>
+ <div class="card"><div class="sec" style="margin-top:0">匯入</div><div class="sub">把備份文字貼到下面，按「匯入」。匯入會覆蓋目前資料。</div><textarea id="bx" oninput="arm=false" placeholder="在這裡貼上備份文字" style="min-height:110px;overflow:auto"></textarea><div id="bm" class="sub"></div><div class="row"><button class="btn p" onclick="imp()">匯入</button><button class="btn" onclick="$('bx').value='';arm=false;$('bm').textContent=''">清空</button><button class="btn" onclick="showBk=false;render()">返回</button></div></div>`}
 const enc=t=>{const c='JT2:'+LZString.compressToEncodedURIComponent(t);return c.length<t.length?c:t};
 async function dec(t){const raw=String(t).replace(/[\u200B-\u200D\uFEFF]/g,'').trim(),m=raw.match(/JT([12]):([\s\S]*)$/);if(!m)return JSON.parse(raw);const b=m[2].replace(/\s/g,'');
  if(m[1]==='2'){const x=LZString.decompressFromEncodedURIComponent(b);if(!x)throw new Error('bad');return JSON.parse(x)}
